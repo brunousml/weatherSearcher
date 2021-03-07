@@ -7,48 +7,32 @@ from flask import Flask, request, jsonify
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-application = Flask(__name__)
-application.config.from_object(os.environ['APP_SETTINGS'])
-application.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(application)
-migrate = Migrate(application, db)
+app = Flask(__name__)
+app.config.from_object(os.environ['APP_SETTINGS'])
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-# from app.models.address_model import AddressModel
+from app.models.address_model import AddressModel
 
 
-@application.route('/')
+@app.route('/')
 def index():
     return 'Welcome back!'
 
 
-@application.route('/logs', methods=['GET', 'POST'])
-def logs():
-    if request.method == 'POST':
-        return 'it receives a log object to save'
-    else:
-        return 'it renders logs list'
-
-
-@application.route('/weather', methods=['POST'])
+@app.route('/weather', methods=['POST'])
 def weather():
     data = request.form
-
-    # check if it exists in cache
-    # remember to set cache invalidation
-
+    # todo: check if it exists in cache
+    # todo: set cache invalidation
     # Getting geo data
     geometry = get_geometry_locations(data['address'])
 
     # Getting weather data
     temperature = get_temperature_by_geometry(geometry)
 
-    # save logs, and address
-    save_weather_address(
-        data['address'],
-        geometry,
-        temperature['temp']
-    )
-
+    # todo: save logs, and address
     return jsonify(temperature)
 
 
@@ -88,4 +72,4 @@ def get_temperature_by_geometry(geometry):
 
 
 if __name__ == "__main__":
-    application.run(host='0.0.0.0', debug=True)
+    app.run(host='0.0.0.0', debug=True)
