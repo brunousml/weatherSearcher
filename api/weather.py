@@ -12,9 +12,9 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 @bp.route('/temperature', methods=['POST'])
 def temperature():
     data = request.form
-    # todo: check if it exists in cache
-    # todo: set cache invalidation
-    # todo: save address, and logs
+    # todo: check if it already exists in cache
+    # todo: set cache invalidation to 1 hour
+    # todo: store cache, and logs
 
     # Getting geo data
     geometry = get_geometry_locations(data['address'])
