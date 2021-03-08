@@ -11,17 +11,15 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 
 @bp.route('/temperature', methods=['POST'])
 def temperature():
-    data = request.form
+    # todo: add authentication, and validations to this route
     # todo: check if it already exists in cache
     # todo: set cache invalidation to 1 hour
     # todo: store cache, and logs
 
-    # Getting geo data
+    # todo: add validation to address field on the form
+    data = request.form
     geometry = get_geometry_locations(data['address'])
-
-    # Getting weather data
     temp = get_temperature_by_geometry(geometry)
-
     return jsonify(temp)
 
 
