@@ -1,28 +1,19 @@
-import hashlib
-import json
-import os
+# import hashlib
+# import json
 
 import requests
-from flask import Flask, request, jsonify
-from flask_migrate import Migrate
-from flask_sqlalchemy import SQLAlchemy
+from flask import (
+    Blueprint, request, jsonify
+)
 
-app = Flask(__name__)
-app.config.from_object(os.environ['APP_SETTINGS'])
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+# from api.db import get_db
+# from api.models import AddressModel
 
-from app.models.address_model import AddressModel
+bp = Blueprint('api', __name__, url_prefix='/api')
 
 
-@app.route('/')
-def index():
-    return 'Welcome back!'
-
-
-@app.route('/weather', methods=['POST'])
-def weather():
+@bp.route('/temperature', methods=['POST'])
+def temperature():
     data = request.form
     # todo: check if it exists in cache
     # todo: set cache invalidation
@@ -30,22 +21,23 @@ def weather():
     geometry = get_geometry_locations(data['address'])
 
     # Getting weather data
-    temperature = get_temperature_by_geometry(geometry)
+    temp = get_temperature_by_geometry(geometry)
 
-    # todo: save logs, and address
-    return jsonify(temperature)
+    # todo: save address, and logs
+    return jsonify(temp)
 
 
-def save_weather_address(address, geometry, temperature):
-    hash_address = hashlib.md5(address.encode(encoding='UTF-8', errors='strict')).digest()
-    geo = json.dumps(geometry)
-    address_model = AddressModel(
-        address=hash_address,
-        zipcode=geo,
-        temperature=temperature
-    )
-    db.session.add(address_model)
-    db.session.commit()
+# def save_weather_address(address, geometry, temperature):
+#     hash_address = hashlib.md5(address.encode(encoding='UTF-8', errors='strict')).digest()
+#     geo = json.dumps(geometry)
+#     address_model = AddressModel(
+#         address=hash_address,
+#         zipcode=geo,
+#         temperature=temperature
+#     )
+#     db = get_db()
+#     # db.session.add(address_model)
+#     # db.session.commit()
 
 
 def get_geometry_locations(address):
@@ -69,7 +61,3 @@ def get_temperature_by_geometry(geometry):
     )
     weather_r = requests.get(weather_url)
     return weather_r.json()['main']
-
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', debug=True)

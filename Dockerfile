@@ -6,7 +6,7 @@ FROM python:3.6.1-alpine
 WORKDIR /app
 
 ADD ./requirements.txt /app
-ADD app/app.py /app
+ADD api/app.py /app
 ADD ./entrypoint.sh /app
 
 RUN pip install --upgrade pip
