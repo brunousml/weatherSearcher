@@ -25,7 +25,7 @@
       <div class="col"></div>
       <div class="col-sm-3 temperature-box">
         <h6>{{ city }}</h6>
-        <h1>{{ Math.round( temperature['temp'] ) }}° C</h1>
+        <h1>{{ temperature }}° C</h1>
       </div>
       <div class="col"></div>
 
@@ -39,10 +39,16 @@
     padding-left: 50px !important;
     padding-top: 15px;
     box-shadow: 0 4px 8px 0 silver, 0 6px 20px 0 silver;
+    height: 120px;
+    width: 120px !important;
   }
   .temperature-box h1 {
     font-size:50px;
     font-weight: bold;
+  }
+  .temperature-box h6 {
+    font-size: 16px;
+    font-weight: bolder;
   }
   .search-btn {
     background-color: #65b8a0;;
@@ -65,8 +71,8 @@ export default {
         address: '',
       },
       loading: '', // todo: use an icon
-      city: 'New York City, NY', // Todo: get the city name
-      temperature: { temp: 10 },
+      city: 'New York City, NY',
+      temperature: 10,
     };
   },
   methods: {
@@ -83,7 +89,10 @@ export default {
         };
         axios.post(path, data, headers)
           .then((res) => {
-            this.temperature = res.data;
+            console.log(res.data);
+            const response = res.data;
+            this.temperature = response.temp;
+            this.city = response.city;
             this.loading = '';
           })
           .catch((error) => {

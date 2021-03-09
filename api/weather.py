@@ -19,8 +19,12 @@ def temperature():
     # todo: add validation to address field on the form
     data = request.form
     geometry = get_geometry_locations(data['address'])
-    temp = get_temperature_by_geometry(geometry)
-    return jsonify(temp)
+    temp = get_temperature_by_geometry(geometry['geo'])
+    result = {
+        'city': geometry['city'],
+        'temp': round(temp['temp']),
+    }
+    return jsonify(result)
 
 
 def get_geometry_locations(address):
@@ -30,7 +34,20 @@ def get_geometry_locations(address):
         key=geo_key
     )
     geo_r = requests.get(geo_url)
-    return geo_r.json()['results'][0]['geometry']['location']
+    # Get country
+    geo_data = geo_r.json()['results'][0]
+    country = ''
+    adm_area = ''
+    for el in geo_data['address_components']:
+        if 'country' in el['types']:
+            country = el['short_name']
+        if 'administrative_area_level_2' in el['types']:
+            adm_area = el['short_name']
+
+    return {
+        'city': "{0} {1}".format(adm_area, country),
+        'geo': geo_data['geometry']['location']
+    }
 
 
 def get_temperature_by_geometry(geometry):
