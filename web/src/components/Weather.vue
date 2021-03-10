@@ -29,6 +29,26 @@
       </div>
       <div class="col"></div>
     </div>
+    <br/>
+    <br/>
+    <div class="row">
+      <table class="table table">
+        <thead>
+          <tr>
+            <th scope="col">address</th>
+            <th scope="col">city found</th>
+            <th scope="col">temperature</th>
+          </tr>
+        </thead>
+        <tbody v-for="item in items" :key="item.message">
+          <tr>
+            <td>{{ item.address }}</td>
+            <td>{{ item.city }}</td>
+            <td>{{ item.temperature }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
@@ -71,7 +91,15 @@ export default {
       },
       loading: '', // todo: use an icon
       city: 'New York City, NY',
-      temperature: 10,
+      temperature: '10° C',
+      items: [
+        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
+        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
+        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
+        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
+        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
+        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
+      ],
     };
   },
   methods: {
