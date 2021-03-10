@@ -25,10 +25,9 @@
       <div class="col"></div>
       <div class="col-sm-3 temperature-box">
         <h6>{{ city }}</h6>
-        <h1>{{ temperature }}° C</h1>
+        <h1>{{ temperature }}</h1>
       </div>
       <div class="col"></div>
-
     </div>
   </div>
 </template>
