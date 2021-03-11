@@ -2,6 +2,7 @@ import json
 import os
 import datetime
 
+
 import requests
 from flask import (
     Blueprint, request, jsonify
@@ -10,19 +11,32 @@ from flask import (
 # Todo: enable versions to api
 bp = Blueprint('api', __name__, url_prefix='/api')
 
+from api.models import Address, db, Log
+
+
+@bp.route('/logs', methods=['GET'])
+def logs():
+    data = []
+    for el in Log.query.order_by(Log.id.desc()).all():
+        data.append(json.loads(el.search))
+
+    return jsonify(data)
+
 
 @bp.route('/temperature', methods=['POST'])
 def temperature():
     # todo: add authentication, and validations to this route
-    # todo: store cache, and logs
-
-    from api.manager import Address, db
     data = request.form
     result = {
         'city': 'Not found address',
         'temp': '',
     }
 
+    # Save logs
+    log = Log(search=json.dumps(data))
+    save_model(log)
+
+    # validate required field
     if 'address' in data and data['address']:
         # Get geo
         geometry = get_geometry_locations(data['address'])
@@ -30,36 +44,46 @@ def temperature():
             result['city'] = geometry['city']
 
             # Check if was already added to the database
-            cached = Address.query.filter_by(address=geometry['city']).first()
+            cached = Address.query.filter_by(geo=json.dumps(geometry['geo'])).first()
             if cached:
                 # set cached values
-                result['city'] = cached.address
                 result['temp'] = cached.temperature
 
                 # Assume the temperature for a Zipcode does not vary within 1-hour window
-                is_cache_invalid = not (cached.updated + datetime.timedelta(hours=1)) >= datetime.datetime.utcnow()
-                if is_cache_invalid:  # if not valid, update it
-                    # I choose using lat, lng because some places do not have zipcode, it limits the search
+                if is_cache_invalid(cached):  # if not valid, update it
+                    # I choose using lat, lng because some searche (ex: brazil) do not have zipcode
                     temp = get_temperature_by_geometry(geometry['geo'])
                     result['temp'] = "{0}° C".format(round(temp['temp']))
 
-                    # Todo: encapsulate it
+                    # Update model temperature
                     cached.temperature = result['temp']
-                    db.session.add(cached)
-                    db.session.commit()
+                    cached.updated = datetime.datetime.utcnow()
+                    save_model(cached)
             else:
+                temp = get_temperature_by_geometry(geometry['geo'])
+                result['temp'] = "{0}° C".format(round(temp['temp']))
+
                 # Todo: encapsulate it
                 address_model = Address(
                     address=result['city'],
                     geo=json.dumps(geometry['geo']),
                     temperature=result['temp'],
                 )
-                db.session.add(address_model)
-                db.session.commit()
-    else:
-        return "address parameter not found in form data", 400
+                save_model(address_model)
 
+
+    else:
+        return "address required parameter not found in form data", 400
     return jsonify(result)
+
+
+def is_cache_invalid(cached):
+    return not (cached.updated + datetime.timedelta(hours=1)) >= datetime.datetime.utcnow()
+
+
+def save_model(model):
+    db.session.add(model)
+    db.session.commit()
 
 
 def get_geometry_locations(address):

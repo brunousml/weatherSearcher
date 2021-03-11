@@ -1,5 +1,22 @@
 from datetime import datetime
-from manager import db
+
+from flask_migrate import Migrate, MigrateCommand
+from flask_script import Manager
+
+# Handles with pythonpath ModuleNotFoundError
+import sys
+
+sys.path = ['', '..'] + sys.path[1:]
+
+from api import create_app, create_db
+
+app = create_app()
+db = create_db(app)
+
+migrate = Migrate(app, db)
+manager = Manager(app)
+
+manager.add_command('db', MigrateCommand)
 
 
 class Address(db.Model):
@@ -10,5 +27,16 @@ class Address(db.Model):
     updated = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
-        return '<Address %r>' % self.zipcode
+        return '<Address %r>' % self.address
 
+
+class Log(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    search = db.Column(db.Text)
+
+    def __repr__(self):
+        return '<Log %r>' % self.search
+
+
+if __name__ == '__main__':
+    manager.run()

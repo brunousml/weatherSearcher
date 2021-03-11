@@ -35,16 +35,12 @@
       <table class="table table">
         <thead>
           <tr>
-            <th scope="col">address</th>
-            <th scope="col">city found</th>
-            <th scope="col">temperature</th>
+            <th scope="col">Search logs</th>
           </tr>
         </thead>
-        <tbody v-for="item in items" :key="item.message">
+        <tbody v-for="log in logs" :key="log.message">
           <tr>
-            <td>{{ item.address }}</td>
-            <td>{{ item.city }}</td>
-            <td>{{ item.temperature }}</td>
+            <td>{{ log.address }}</td>
           </tr>
         </tbody>
       </table>
@@ -92,14 +88,7 @@ export default {
       loading: '', // todo: use an icon
       city: 'New York City, NY',
       temperature: '10° C',
-      items: [
-        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
-        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
-        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
-        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
-        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
-        { address: 'new york', city: 'New York City, NY', temperature: '10° C' },
-      ],
+      logs: [],
     };
   },
   methods: {
@@ -107,6 +96,7 @@ export default {
       if (this.$refs.my_input.value.length > 3) {
         this.loading = 'Loading...';
         const path = 'http://0.0.0.0:5000/api/temperature'; // Todo: move to a environ variable
+        const logsPath = 'http://0.0.0.0:5000/api/logs'; // Todo: move to a environ variable
         const data = new FormData();
         data.append('address', this.$refs.my_input.value); // Todo: get it by input
         const headers = {
@@ -114,13 +104,23 @@ export default {
             'Content-type': 'application/json',
           },
         };
+
         axios.post(path, data, headers)
           .then((res) => {
-            console.log(res.data);
             const response = res.data;
             this.temperature = response.temp;
             this.city = response.city;
             this.loading = '';
+          })
+          .catch((error) => {
+            // eslint-disable-next-line
+            console.error(error);
+          });
+
+        axios.get(logsPath)
+          .then((res) => {
+            const response = res.data;
+            this.logs = response;
           })
           .catch((error) => {
             // eslint-disable-next-line
