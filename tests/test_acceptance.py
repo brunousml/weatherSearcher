@@ -58,7 +58,7 @@ def test_when_post_temperature_given_an_empty_address_then_get_temperature_and_c
 
     # Assert
     assert 400 == rv.status_code
-    assert b'address parameter not found in form data' in rv.response
+    assert b'address required parameter not found in form data' in rv.response
 
 
 def test_when_post_temperature_given_a_wrong_data_param_then_bad_request_status_code(client):
@@ -70,5 +70,5 @@ def test_when_post_temperature_given_a_wrong_data_param_then_bad_request_status_
 
     # Assert
     assert 400 == rv.status_code
-    assert b'address parameter not found in form data' in rv.response
+    assert b'address required parameter not found in form data' in rv.response
 
