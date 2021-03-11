@@ -1,4 +1,6 @@
+import json
 import os
+import datetime
 
 import requests
 from flask import (
@@ -12,11 +14,9 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 @bp.route('/temperature', methods=['POST'])
 def temperature():
     # todo: add authentication, and validations to this route
-    # todo: check if it already exists in cache
-    # todo: set cache invalidation to 1 hour
     # todo: store cache, and logs
 
-    # todo: add validation to address field on the form
+    from api.manager import Address, db
     data = request.form
     result = {
         'city': 'Not found address',
@@ -24,12 +24,38 @@ def temperature():
     }
 
     if 'address' in data and data['address']:
+        # Get geo
         geometry = get_geometry_locations(data['address'])
         if len(geometry) >= 2:
             result['city'] = geometry['city']
-            temp = get_temperature_by_geometry(geometry['geo'])
-            result['temp'] = "{0}° C".format(round(temp['temp']))
 
+            # Check if was already added to the database
+            cached = Address.query.filter_by(address=geometry['city']).first()
+            if cached:
+                # set cached values
+                result['city'] = cached.address
+                result['temp'] = cached.temperature
+
+                # Assume the temperature for a Zipcode does not vary within 1-hour window
+                is_cache_invalid = not (cached.updated + datetime.timedelta(hours=1)) >= datetime.datetime.utcnow()
+                if is_cache_invalid:  # if not valid, update it
+                    # I choose using lat, lng because some places do not have zipcode, it limits the search
+                    temp = get_temperature_by_geometry(geometry['geo'])
+                    result['temp'] = "{0}° C".format(round(temp['temp']))
+
+                    # Todo: encapsulate it
+                    cached.temperature = result['temp']
+                    db.session.add(cached)
+                    db.session.commit()
+            else:
+                # Todo: encapsulate it
+                address_model = Address(
+                    address=result['city'],
+                    geo=json.dumps(geometry['geo']),
+                    temperature=result['temp'],
+                )
+                db.session.add(address_model)
+                db.session.commit()
     else:
         return "address parameter not found in form data", 400
 
@@ -73,4 +99,6 @@ def get_temperature_by_geometry(geometry):
         key=weather_key
     )
     weather_r = requests.get(weather_url)
+    if weather_r.status_code >= 400:
+        raise Exception('WeatherAPI: Invalid api key')
     return weather_r.json()['main']

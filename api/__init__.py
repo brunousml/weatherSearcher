@@ -1,7 +1,16 @@
 import os
+from flask_sqlalchemy import SQLAlchemy
 
 from flask import Flask
 from flask_cors import CORS
+
+
+def create_db(app):
+    # app.config.from_pyfile('config.cfg')
+    db = SQLAlchemy(app)
+    db.init_app(app)
+
+    return db
 
 
 def create_app(test_config=None):
@@ -11,6 +20,8 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'api.sqlite'),
     )
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
     CORS(app)
 
     if test_config is None:
@@ -31,10 +42,8 @@ def create_app(test_config=None):
     def index():
         return 'Weather API'
 
-    from . import db
-    db.init_app(app)
-
     from . import weather
     app.register_blueprint(weather.bp)
 
+    create_db(app)
     return app
