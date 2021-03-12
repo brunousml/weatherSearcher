@@ -28,7 +28,7 @@ def temperature():
     # todo: add authentication, and validations to this route
     data = request.form
     result = {
-        'city': 'Not found address',
+        'city': 'Address not found',
         'temp': '',
     }
 
